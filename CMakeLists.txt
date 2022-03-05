@@ -14,7 +14,9 @@ find_package(OpenGL REQUIRED)
 
 target_include_directories(opengl-explorer PUBLIC ${OPENGL_INCLUDE_DIR})
 
-target_link_libraries(opengl-explorer "-framework Cocoa")
-target_link_libraries(opengl-explorer "-framework OpenGL")
-target_link_libraries(opengl-explorer "-framework IOKit")
+if (APPLE)
+    target_link_libraries(opengl-explorer "-framework Cocoa")
+    target_link_libraries(opengl-explorer "-framework OpenGL")
+    target_link_libraries(opengl-explorer "-framework IOKit")
+endif (APPLE)
 target_link_libraries(opengl-explorer glfw ${OPENGL_gl_LIBRARY})
