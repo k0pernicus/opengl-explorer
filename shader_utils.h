@@ -1,6 +1,8 @@
 #ifndef SHADER_UTILS_H
 #define SHADER_UTILS_H
 
+#include <optional>
+
 namespace ShaderUtils
 {
 
@@ -14,17 +16,17 @@ namespace ShaderUtils
     {
 
     private:
-        unsigned int vertexShader;
-        unsigned int fragmentShader;
-        unsigned int program = 0;
+        std::optional<unsigned int> vertexShader = {};
+        std::optional<unsigned int> fragmentShader = {};
+        std::optional<unsigned int> program = {};
         bool registered = false;
 
     public:
         Program();
         ~Program();
-        unsigned int registerShader(const Type shader_type, const char *shader_source);
+        bool registerShader(const Type shader_type, const char *shader_source);
         bool registerProgram();
-        unsigned int getProgram() const;
+        std::optional<unsigned int> getProgram() const;
         bool programIsRegistered() const;
     };
 

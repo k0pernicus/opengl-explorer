@@ -6,19 +6,26 @@
 
 #include "logs.h"
 #include "shader_utils.h"
+#include <optional>
 #include <iostream>
 
 ShaderUtils::Program::Program() {}
 
 ShaderUtils::Program::~Program()
 {
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    if (registered)
-        glDeleteProgram(program);
+    if (vertexShader.has_value())
+    {
+        glDeleteShader(vertexShader.value());
+    }
+    if (vertexShader.has_value())
+    {
+        glDeleteShader(fragmentShader.value());
+    }
+    if (registered && program.has_value())
+        glDeleteProgram(program.value());
 }
 
-unsigned int ShaderUtils::Program::registerShader(const ShaderUtils::Type shader_type, const char *shader_source)
+bool ShaderUtils::Program::registerShader(const ShaderUtils::Type shader_type, const char *shader_source)
 {
     int success = {};
     char errorMessage[1024] = {};
@@ -26,34 +33,38 @@ unsigned int ShaderUtils::Program::registerShader(const ShaderUtils::Type shader
     if (shader_type == ShaderUtils::Type::VERTEX_SHADER_TYPE)
     {
         vertexShader = glCreateShader(GL_VERTEX_SHADER);
+        const unsigned int vertexShaderValue = vertexShader.value();
         // Now, pass the shaders
-        glShaderSource(vertexShader, 1, &shader_source, NULL);
+        glShaderSource(vertexShaderValue, 1, &shader_source, NULL);
         // And now, compile them
-        glCompileShader(vertexShader);
+        glCompileShader(vertexShaderValue);
 
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+        glGetShaderiv(vertexShaderValue, GL_COMPILE_STATUS, &success);
         if (!success)
         {
-            glGetShaderInfoLog(vertexShader, 1024, NULL, errorMessage);
+            glGetShaderInfoLog(vertexShaderValue, 1024, NULL, errorMessage);
             error("Vertex shader compilation error: " << errorMessage);
+            return false;
         }
     }
     else
     {
         fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+        const unsigned int fragmentShaderValue = fragmentShader.value();
         // Now, pass the shaders
-        glShaderSource(fragmentShader, 1, &shader_source, NULL);
+        glShaderSource(fragmentShaderValue, 1, &shader_source, NULL);
         // And now, compile them
-        glCompileShader(fragmentShader);
+        glCompileShader(fragmentShaderValue);
 
-        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+        glGetShaderiv(fragmentShaderValue, GL_COMPILE_STATUS, &success);
         if (!success)
         {
-            glGetShaderInfoLog(fragmentShader, 1024, NULL, errorMessage);
+            glGetShaderInfoLog(fragmentShaderValue, 1024, NULL, errorMessage);
             error("Fragment shader compilation error: " << errorMessage);
+            return false;
         }
     }
-    return success;
+    return true;
 }
 
 bool ShaderUtils::Program::registerProgram()
@@ -61,34 +72,43 @@ bool ShaderUtils::Program::registerProgram()
     if (registered)
     {
         error("program is already registered");
-        return 0;
+        return false;
+    }
+    if (!vertexShader.has_value() || !fragmentShader.has_value())
+    {
+        error("cannot compile program without vertex and fragment shaders");
+        return false;
     }
     int success = {};
     char errorMessage[1024] = {};
+    const unsigned int vertexShaderValue = vertexShader.value();
+    const unsigned int fragmentShaderValue = fragmentShader.value();
 
     program = glCreateProgram();
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-    glLinkProgram(program);
+    const unsigned int programValue = program.value();
 
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
+    glAttachShader(programValue, vertexShaderValue);
+    glAttachShader(programValue, fragmentShaderValue);
+    glLinkProgram(programValue);
+
+    glGetProgramiv(programValue, GL_LINK_STATUS, &success);
     if (!success)
     {
-        glGetProgramInfoLog(program, 1024, NULL, errorMessage);
+        glGetProgramInfoLog(programValue, 1024, NULL, errorMessage);
         error("Shader linking error: " << errorMessage);
         return false;
     }
 
     // We can now delete our vertex and fragment shaders
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    glUseProgram(program);
+    glDeleteShader(vertexShaderValue);
+    glDeleteShader(fragmentShaderValue);
+    glUseProgram(programValue);
     registered = true;
 
     return true;
 }
 
-unsigned int ShaderUtils::Program::getProgram() const
+std::optional<unsigned int> ShaderUtils::Program::getProgram() const
 {
     return program;
 }
