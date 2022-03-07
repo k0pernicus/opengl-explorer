@@ -118,6 +118,7 @@ int main(void)
     }
     /* END OF SHADER PART */
 
+    /* DRAW THE TRIANGLE */
     const MathsUtils::vertex vertices[3] = {
         {0.0f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f},
         {0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f},
@@ -143,20 +144,21 @@ int main(void)
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
-    // Specify position attribute
+    // Specify position attribute -> 0 as offset
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, MathsUtils::VERTEX_ELEMENTS_NB * sizeof(float), (GLvoid *)0);
     glEnableVertexAttribArray(0);
 
-    // Specify color attribute
+    // Specify color attribute -> 3 as offset
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, MathsUtils::VERTEX_ELEMENTS_NB * sizeof(float), (GLvoid *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    /* END OF DRAWING */
 
     while (!glfwWindowShouldClose(window))
     {
         // Render
-        glClearColor(0.5, 0.2, 0.3, 1.0);
+        glClearColor(0.5, 0.5, 0.5, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(shader_utils.getProgram().value());
         glBindVertexArray(VAO);
@@ -167,9 +169,9 @@ int main(void)
         glfwSwapBuffers(window);
     }
 
+    // ... here, the user closed the window
     glDeleteBuffers(1, &VBO);
     glDeleteVertexArrays(1, &VAO);
-    // ... here, the user closed the window
     glfwTerminate();
     return 0;
 }
