@@ -1,5 +1,5 @@
-#ifndef SHADER_UTILS_H
-#define SHADER_UTILS_H
+#ifndef _SHADER_UTILS_H
+#define _SHADER_UTILS_H
 
 #include <optional>
 

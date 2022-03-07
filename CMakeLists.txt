@@ -7,7 +7,7 @@ set(CXX_FLAGS "-Wall")
 set(CMAKE_CXX_FLAGS, "${CXX_FLAGS}")
 set(CMAKE_BUILD_TYPE Debug)
 
-add_executable(opengl-explorer shader_utils.cpp main.cpp)
+add_executable(opengl-explorer maths_utils.cpp shader_utils.cpp main.cpp)
 
 find_package(glfw3 3.4 REQUIRED)
 find_package(OpenGL REQUIRED)

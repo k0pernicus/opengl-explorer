@@ -1,16 +1,16 @@
 #ifdef __APPLE__
 /* Defined before OpenGL and GLUT includes to avoid deprecation messages */
 #define GL_SILENCE_DEPRECATION
-// #include <OpenGL/gl.h>
-// #include <GLUT/glut.h>
+#define GLFW_INCLUDE_GLCOREARB
 #include <GLFW/glfw3.h>
 // #else
-// #include <GL/gl.h>
+//  #include <GL/gl.h>
 // #include <GL/glut.h>
 #endif
 
 #include "logs.h"
 #include "shader_utils.h"
+#include "maths_utils.h"
 #include <iostream>
 
 const size_t WIDTH = 640;
@@ -94,7 +94,7 @@ int main(void)
                                             "out vec4 finalColor;\n"
                                             "void main()\n"
                                             "{\n"
-                                            "    finalColor = vec4(0.8, 0.0, 0.0, 1.0);\n"
+                                            "    finalColor = vec4(fragmentColor, 1.0);\n"
                                             "}\0";
 
     auto shader_utils = ShaderUtils::Program{};
@@ -118,16 +118,57 @@ int main(void)
     }
     /* END OF SHADER PART */
 
+    const MathsUtils::vertex vertices[3] = {
+        {0.0f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f},
+        {0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f},
+        {-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f}};
+
+    // Vertex Buffer Object = VBO
+    GLuint VBO = {};
+    glGenBuffers(1, &VBO);
+
+    // Something failed when generating buffers
+    if (glGetError() != GL_NO_ERROR)
+    {
+        error("error when generating buffers");
+        glDeleteBuffers(1, &VBO); // TODO: Needed?
+        glfwTerminate();
+        return -1;
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, MathsUtils::getNbElements(vertices) * sizeof(float), vertices, GL_STATIC_DRAW | GL_MAP_READ_BIT);
+
+    // Vertex Arrays Object = VAO
+    GLuint VAO = {};
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    // Specify position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, MathsUtils::VERTEX_ELEMENTS_NB * sizeof(float), (GLvoid *)0);
+    glEnableVertexAttribArray(0);
+
+    // Specify color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, MathsUtils::VERTEX_ELEMENTS_NB * sizeof(float), (GLvoid *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     while (!glfwWindowShouldClose(window))
     {
         // Render
+        glClearColor(0.5, 0.2, 0.3, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
-        // Swap front and back buffers
-        glfwSwapBuffers(window);
+        glUseProgram(shader_utils.getProgram().value());
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
         // Poll for and process events
         glfwPollEvents();
+        // Swap front and back buffers
+        glfwSwapBuffers(window);
     }
 
+    glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, &VAO);
     // ... here, the user closed the window
     glfwTerminate();
     return 0;

@@ -14,13 +14,9 @@ ShaderUtils::Program::Program() {}
 ShaderUtils::Program::~Program()
 {
     if (vertexShader.has_value())
-    {
         glDeleteShader(vertexShader.value());
-    }
     if (vertexShader.has_value())
-    {
         glDeleteShader(fragmentShader.value());
-    }
     if (registered && program.has_value())
         glDeleteProgram(program.value());
 }
