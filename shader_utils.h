@@ -16,9 +16,9 @@ namespace ShaderUtils
     {
 
     private:
-        std::optional<unsigned int> vertexShader = {};
-        std::optional<unsigned int> fragmentShader = {};
-        std::optional<unsigned int> program = {};
+        std::optional<unsigned int> vertexShader = std::nullopt;
+        std::optional<unsigned int> fragmentShader = std::nullopt;
+        std::optional<unsigned int> program = std::nullopt;
         bool registered = false;
 
     public:
