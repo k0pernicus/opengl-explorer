@@ -26,39 +26,40 @@ bool ShaderUtils::Program::registerShader(const ShaderUtils::Type shader_type, c
     int success = {};
     char errorMessage[1024] = {};
 
-    if (shader_type == ShaderUtils::Type::VERTEX_SHADER_TYPE)
-    {
-        vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        const unsigned int vertexShaderValue = vertexShader.value();
-        // Now, pass the shaders
-        glShaderSource(vertexShaderValue, 1, &shader_source, NULL);
-        // And now, compile them
-        glCompileShader(vertexShaderValue);
+    bool isFragmentShader = shader_type == ShaderUtils::Type::FRAGMENT_SHADER_TYPE;
 
-        glGetShaderiv(vertexShaderValue, GL_COMPILE_STATUS, &success);
-        if (!success)
+    auto real_shader_type = !isFragmentShader ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER;
+
+    auto shader = glCreateShader(real_shader_type);
+    // Now, pass the shaders
+    glShaderSource(shader, 1, &shader_source, NULL);
+    // And now, compile them
+    glCompileShader(shader);
+
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(shader, 1024, NULL, errorMessage);
+        if (isFragmentShader)
         {
-            glGetShaderInfoLog(vertexShaderValue, 1024, NULL, errorMessage);
-            error("Vertex shader compilation error: " << errorMessage);
-            return false;
+            error("Fragment shader compilation error : " << errorMessage);
         }
+        else
+        {
+
+            error("Vertex shader compilation error : " << errorMessage);
+        }
+
+        return false;
+    }
+
+    if (isFragmentShader)
+    {
+        fragmentShader = shader;
     }
     else
     {
-        fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        const unsigned int fragmentShaderValue = fragmentShader.value();
-        // Now, pass the shaders
-        glShaderSource(fragmentShaderValue, 1, &shader_source, NULL);
-        // And now, compile them
-        glCompileShader(fragmentShaderValue);
-
-        glGetShaderiv(fragmentShaderValue, GL_COMPILE_STATUS, &success);
-        if (!success)
-        {
-            glGetShaderInfoLog(fragmentShaderValue, 1024, NULL, errorMessage);
-            error("Fragment shader compilation error: " << errorMessage);
-            return false;
-        }
+        vertexShader = shader;
     }
     return true;
 }
