@@ -11,7 +11,7 @@ First, please to make sure that:
 
 Now, in the root folder: `cmake . && make && ./opengl-explorer`.
 
-I wrote a blog post about this exercise here, please take a look for the troubleshootings: [blog post](https://carette.xyz/opengl_and_cpp_on_m1_mac).
+I wrote a blog post about this exercise here, please take a look for the troubleshootings: [blog post](https://carette.xyz/posts/opengl_and_cpp_on_m1_mac/).
 
 ## Screenshot
 
