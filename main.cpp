@@ -28,8 +28,18 @@ static void quitCallback(GLFWwindow *window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
+/**
+ * @brief Load the shaders, in order to display the result
+ *
+ * @param erase_if_program_registered Allow to erase the shader if it exists
+ * @return true The shader has been successfully registered
+ * @return false The shader has not been registered, due to an error
+ */
 const bool loadShaderProgram(const bool erase_if_program_registered);
 
+/*
+ * Callback to handle the "reload" event, once the user pressed the 'r' key.
+ */
 static void reloadShaders(GLFWwindow *window, int key, int scancode, int action, int _mods)
 {
     if (key == GLFW_KEY_R && action == GLFW_PRESS)
