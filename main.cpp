@@ -77,8 +77,9 @@ GLFWwindow *initializeWindow()
  * @param path The path of the file
  * @return The content of the file, as a string (read all file)
  */
-inline auto read_file(const std::string_view path) -> const std::string
+inline auto readFile(const std::string_view path) -> const std::string
 {
+    // Avoid dynamic allocation: read the 4096 first bytes
     constexpr auto read_size = std::size_t(4096);
     auto stream = std::ifstream(path.data());
     stream.exceptions(std::ios_base::badbit);
@@ -100,8 +101,8 @@ void reloadShaderProgram()
         return;
     }
 
-    const std::string basicVertexShaderSource = read_file("shaders/vertex_shader.glsl");
-    const std::string basicFragmentShaderSource = read_file("shaders/fragment_shader.glsl");
+    const std::string basicVertexShaderSource = readFile("shaders/vertex_shader.glsl");
+    const std::string basicFragmentShaderSource = readFile("shaders/fragment_shader.glsl");
 
     if (!shader_utils.registerShader(ShaderUtils::Type::VERTEX_SHADER_TYPE, basicVertexShaderSource.c_str()))
     {
@@ -142,8 +143,8 @@ int main(void)
     info("Renderer: " << renderer);
     info("OpenGL version supported: " << version);
 
-    const std::string basicVertexShaderSource = read_file("shaders/vertex_shader.glsl");
-    const std::string basicFragmentShaderSource = read_file("shaders/fragment_shader.glsl");
+    const std::string basicVertexShaderSource = readFile("shaders/vertex_shader.glsl");
+    const std::string basicFragmentShaderSource = readFile("shaders/fragment_shader.glsl");
 
     if (!shader_utils.registerShader(ShaderUtils::Type::VERTEX_SHADER_TYPE, basicVertexShaderSource.c_str()))
     {
