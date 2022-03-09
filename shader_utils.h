@@ -61,10 +61,11 @@ namespace ShaderUtils
          * @brief Register the GPU program (or shader), after compilation
          * of the fragment and vertex shaders.
          *
+         * @param erase_if_registered Erase the current program if one is already registered
          * @return true The shader has been successfully registered
          * @return false The shader has not been successfully registered - error is logged
          */
-        bool registerProgram();
+        bool registerProgram(bool erase_if_registered);
 
         /**
          * @brief Returns the GPU program ID object, as optional

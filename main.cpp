@@ -12,10 +12,12 @@
 #include "shader_utils.h"
 #include "maths_utils.h"
 #include <iostream>
+#include <fstream>
 
 const size_t WIDTH = 640;
 const size_t HEIGHT = 480;
 const char *WINDOW_NAME = "Test OpenGL";
+auto shader_utils = ShaderUtils::Program{};
 
 /*
  * Callback to handle the "close window" event, once the user pressed the Escape key.
@@ -24,6 +26,17 @@ static void quitCallback(GLFWwindow *window, int key, int scancode, int action, 
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+}
+
+void reloadShaderProgram();
+
+static void reloadShaders(GLFWwindow *window, int key, int scancode, int action, int _mods)
+{
+    if (key == GLFW_KEY_R && action == GLFW_PRESS)
+    {
+        debug("reloading...");
+        reloadShaderProgram();
+    }
 }
 
 /*
@@ -47,12 +60,63 @@ GLFWwindow *initializeWindow()
     }
     // Close the window as soon as the Escape key has been pressed
     glfwSetKeyCallback(window, quitCallback);
+    // Easy reload
+    glfwSetKeyCallback(window, reloadShaders);
     // Makes the window context current
     glfwMakeContextCurrent(window);
     // Enable the viewport
     glViewport(0, 0, HEIGHT, WIDTH);
 
     return window;
+}
+
+/**
+ * @brief Returns the all file, as a string, which the file path has been passed
+ * as parameter
+ *
+ * @param path The path of the file
+ * @return The content of the file, as a string (read all file)
+ */
+inline auto read_file(const std::string_view path) -> const std::string
+{
+    constexpr auto read_size = std::size_t(4096);
+    auto stream = std::ifstream(path.data());
+    stream.exceptions(std::ios_base::badbit);
+
+    auto out = std::string();
+    auto buf = std::string(read_size, '\0');
+    while (stream.read(&buf[0], read_size))
+    {
+        out.append(buf, 0, stream.gcount());
+    }
+    out.append(buf, 0, stream.gcount());
+    return out;
+}
+
+void reloadShaderProgram()
+{
+    if (!shader_utils.programIsRegistered() || !shader_utils.getProgram().has_value())
+    {
+        return;
+    }
+
+    const std::string basicVertexShaderSource = read_file("shaders/vertex_shader.glsl");
+    const std::string basicFragmentShaderSource = read_file("shaders/fragment_shader.glsl");
+
+    if (!shader_utils.registerShader(ShaderUtils::Type::VERTEX_SHADER_TYPE, basicVertexShaderSource.c_str()))
+    {
+        return;
+    }
+
+    if (!shader_utils.registerShader(ShaderUtils::Type::FRAGMENT_SHADER_TYPE, basicFragmentShaderSource.c_str()))
+    {
+        return;
+    }
+
+    if (!shader_utils.registerProgram(true))
+    {
+        return;
+    }
 }
 
 int main(void)
@@ -78,40 +142,22 @@ int main(void)
     info("Renderer: " << renderer);
     info("OpenGL version supported: " << version);
 
-    /* SHADER PART */
-    const char *basicVertexShaderSource = "#version 410 core\n"
-                                          "layout (location = 0) in vec3 vertexPosition;\n"
-                                          "layout (location = 1) in vec3 vertexColor;\n"
-                                          "layout (location = 0) out vec3 fragmentColor;\n"
-                                          "void main()\n"
-                                          "{\n"
-                                          "    gl_Position = vec4(vertexPosition, 1.0);\n" // `w` is used for perspective
-                                          "    fragmentColor = vertexColor;\n"
-                                          "}\0";
+    const std::string basicVertexShaderSource = read_file("shaders/vertex_shader.glsl");
+    const std::string basicFragmentShaderSource = read_file("shaders/fragment_shader.glsl");
 
-    const char *basicFragmentShaderSource = "#version 410 core\n"
-                                            "layout (location = 0) in vec3 fragmentColor;\n"
-                                            "out vec4 finalColor;\n"
-                                            "void main()\n"
-                                            "{\n"
-                                            "    finalColor = vec4(fragmentColor, 1.0);\n"
-                                            "}\0";
-
-    auto shader_utils = ShaderUtils::Program{};
-
-    if (!shader_utils.registerShader(ShaderUtils::Type::VERTEX_SHADER_TYPE, basicVertexShaderSource))
+    if (!shader_utils.registerShader(ShaderUtils::Type::VERTEX_SHADER_TYPE, basicVertexShaderSource.c_str()))
     {
         glfwTerminate();
         return -1;
     }
 
-    if (!shader_utils.registerShader(ShaderUtils::Type::FRAGMENT_SHADER_TYPE, basicFragmentShaderSource))
+    if (!shader_utils.registerShader(ShaderUtils::Type::FRAGMENT_SHADER_TYPE, basicFragmentShaderSource.c_str()))
     {
         glfwTerminate();
         return -1;
     }
 
-    if (!shader_utils.registerProgram())
+    if (!shader_utils.registerProgram(false))
     {
         glfwTerminate();
         return -1;

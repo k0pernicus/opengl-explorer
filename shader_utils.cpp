@@ -64,12 +64,17 @@ bool ShaderUtils::Program::registerShader(const ShaderUtils::Type shader_type, c
     return true;
 }
 
-bool ShaderUtils::Program::registerProgram()
+bool ShaderUtils::Program::registerProgram(bool erase_if_registered)
 {
-    if (registered)
+    if (registered && (!erase_if_registered || !program.has_value()))
     {
         error("program is already registered");
         return false;
+    }
+    if (registered && erase_if_registered)
+    {
+        glDeleteProgram(program.value());
+        registered = false;
     }
     if (!vertexShader.has_value() || !fragmentShader.has_value())
     {
