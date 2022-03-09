@@ -16,7 +16,7 @@
 
 const size_t WIDTH = 640;
 const size_t HEIGHT = 480;
-const char *WINDOW_NAME = "Test OpenGL";
+const char *WINDOW_NAME = "OpenGL Explorer";
 auto shader_utils = ShaderUtils::Program{};
 
 /*
@@ -28,14 +28,14 @@ static void quitCallback(GLFWwindow *window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
-void reloadShaderProgram();
+const bool loadShaderProgram(const bool erase_if_program_registered);
 
 static void reloadShaders(GLFWwindow *window, int key, int scancode, int action, int _mods)
 {
     if (key == GLFW_KEY_R && action == GLFW_PRESS)
     {
         debug("reloading...");
-        reloadShaderProgram();
+        loadShaderProgram(true);
     }
 }
 
@@ -94,30 +94,29 @@ inline auto readFile(const std::string_view path) -> const std::string
     return out;
 }
 
-void reloadShaderProgram()
+const bool loadShaderProgram(const bool erase_if_program_registered = true)
 {
-    if (!shader_utils.programIsRegistered() || !shader_utils.getProgram().has_value())
-    {
-        return;
-    }
-
     const std::string basicVertexShaderSource = readFile("shaders/vertex_shader.glsl");
     const std::string basicFragmentShaderSource = readFile("shaders/fragment_shader.glsl");
 
     if (!shader_utils.registerShader(ShaderUtils::Type::VERTEX_SHADER_TYPE, basicVertexShaderSource.c_str()))
     {
-        return;
+        error("failed to register the vertex shader...");
+        return false;
     }
 
     if (!shader_utils.registerShader(ShaderUtils::Type::FRAGMENT_SHADER_TYPE, basicFragmentShaderSource.c_str()))
     {
-        return;
+        error("failed to register the fragment shader...");
+        return false;
     }
 
-    if (!shader_utils.registerProgram(true))
+    if (!shader_utils.registerProgram(erase_if_program_registered))
     {
-        return;
+        error("failed to register the program...");
+        return false;
     }
+    return true;
 }
 
 int main(void)
@@ -143,23 +142,9 @@ int main(void)
     info("Renderer: " << renderer);
     info("OpenGL version supported: " << version);
 
-    const std::string basicVertexShaderSource = readFile("shaders/vertex_shader.glsl");
-    const std::string basicFragmentShaderSource = readFile("shaders/fragment_shader.glsl");
-
-    if (!shader_utils.registerShader(ShaderUtils::Type::VERTEX_SHADER_TYPE, basicVertexShaderSource.c_str()))
+    if (!loadShaderProgram(false))
     {
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!shader_utils.registerShader(ShaderUtils::Type::FRAGMENT_SHADER_TYPE, basicFragmentShaderSource.c_str()))
-    {
-        glfwTerminate();
-        return -1;
-    }
-
-    if (!shader_utils.registerProgram(false))
-    {
+        error("can't load the shaders to initiate the program");
         glfwTerminate();
         return -1;
     }
